@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta xmlns="http://exist-db.org/xquery/repo">
+   <description>Theatrum Neolatinum Annotation: data</description>
+   <author>Boris Lehečka</author>
+   <website>http://theatrum-neolatinum.cz</website>
+   <status>alpha</status>
+   <license>GNU-LGPL</license>
+   <copyright>true</copyright>
+   <type>application</type>
+   <target>tnlanno-data</target>
+   <prepare>pre-install.xql</prepare>
+   <finish>post-install.xql</finish>
+   <permissions user="tnl" group="tei" mode="rw-rw-r--"/>
+</meta>

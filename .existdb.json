@@ -1,0 +1,26 @@
+{
+    "servers": {
+        "localhost": {
+            "server": "http://localhost:8080/exist",
+            "user": "admin",
+            "password": "",
+            "root": "/db/apps/tnlanno-data"    
+        }
+    },
+    "sync": {
+        "server": "localhost",
+        "ignore": [
+            ".existdb.json",
+            ".git/**",
+            ".github/**",
+            ".vs/**",
+            ".vscode/**",
+            "node_modules/**",
+            "bower_components/**",
+            "build/**",
+            "*.code-workspace",
+            "*.properties",
+            "local.*"
+        ]
+    }
+}

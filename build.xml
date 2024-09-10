@@ -1,0 +1,85 @@
+<project name="${package(abbrev)}" default="xar">
+    <property name="data.version" value="" />
+    <property name="replace.token" value="tnlanno-data" />
+    <xmlproperty file="expath-pkg.xml" /> <!-- Adjust path below to match location of your npm binary -->
+    <property name="project.version" value="${package(version)}" />
+    <property name="project.app" value="${package(abbrev)}" />
+    <property name="build" value="${basedir}/build" />
+    <property name="build.dir" value="build" />
+    <property name="app.build.dir" value="${build}/${project.app}-${project.version}" /> <!-- -${data.version} -->
+    
+    <target name="test.if.version.is.set">
+        <condition property="version.is.set">
+            <length string="${data.version}" trim="true" when="greater" length="0"/>
+        </condition>
+    </target>
+
+    <target name="clean">
+        <echo message="Deleting ${app.build.dir} directory" />
+        <delete dir="${app.build.dir}" />
+    </target>
+
+    <target name="prepare">
+        <mkdir dir="${build}" />
+        <mkdir dir="${app.build.dir}" />
+        <copy todir="${app.build.dir}">
+            <fileset dir="${basedir}">
+                <exclude name="${build.dir}" />
+                <exclude name="${build.dir}/**" />
+                <exclude name="*.build.properties" />
+                <exclude name=".github/**" />
+                <exclude name=".vs/**" />
+                <exclude name=".vscode/**" />
+                <exclude name="build.properties" />
+                <exclude name=".existdb.json" />
+                <exclude name="*.xstrc" />
+                <exclude name=".gitignore" />
+                <exclude name="*.code-workspace" />
+                <exclude name="local.*" />
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="xar" depends="xar-zip,xar-versions" />
+
+    <target name="xar-complete" depends="clean,xar" />
+
+    <target name="xar-zip" depends="repo.prepare">
+        <mkdir dir="${build.dir}" />
+        <zip destfile="${build.dir}/${project.app}-${project.version}.xar">
+            <fileset dir=".">
+                <exclude name="${build.dir}" />
+                <exclude name="${build.dir}/**" />
+                <exclude name="*.build.properties" />
+                <exclude name=".github/**" />
+                <exclude name=".vs/**" />
+                <exclude name=".vscode/**" />
+                <exclude name="build.properties" />
+                <exclude name=".existdb.json" />
+                <exclude name="*.xstrc" />
+                <exclude name=".gitignore" />
+                <exclude name="*.code-workspace" />
+                <exclude name="local.*" />
+            </fileset>
+        </zip>
+        <copy file="${build.dir}/${project.app}-${project.version}.xar" overwrite="true" tofile="${build.dir}/${project.app}.xar"/>
+    </target>
+
+    <target name="xar-versions" if="version.is.set"  depends="test.if.version.is.set">
+        <copy file="${build.dir}/${project.app}-${project.version}.xar" overwrite="true" tofile="${build.dir}/${project.app}-${data.version}.xar"/>
+    </target>
+
+    <target name="repo.prepare" depends="prepare">
+        <xslt style="${app.build.dir}/version.xsl" in="repo.xml" out="${app.build.dir}/repo.xml">
+         <param name="version" expression="${data.version}"/>
+        </xslt>
+        <xslt style="${app.build.dir}/version.xsl" in="expath-pkg.xml" out="${app.build.dir}/expath-pkg.xml">
+            <param name="version" expression="${data.version}"/>
+        </xslt>
+        <replace dir="${app.build.dir}/modules/" token="/${replace.token}/" value="/{$replace.token}-${data.version}/">
+            <include name="**/*.xq?"/>
+        </replace>
+    </target>
+
+
+</project>

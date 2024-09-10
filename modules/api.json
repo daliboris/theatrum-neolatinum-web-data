@@ -1,0 +1,477 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "version": "1.0.0",
+        "title": "Theatrum Neolatinum Data API",
+        "description": "The API defined by the Theatrum Neolatinum Data application"
+    },
+    "servers": [
+        {
+            "url": "/exist/apps/tnlanno-data",
+            "description": "Relative URL using the current host and port"
+        }
+    ],
+    "tags": [
+        {
+			"name": "auth",
+			"description": "Authenticate, login or logout database user"
+		},
+		{
+			"name": "files",
+			"description": "File up- and downloads of various kinds"
+		},
+		{
+			"name": "query",
+			"description": "Route specifies query parameters"
+		}
+	],
+    "security": [
+        {
+            "cookieAuth": []
+        },
+        {
+            "basicAuth": []
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "basicAuth": {
+                "type": "http",
+                "scheme": "basic"
+            },
+            "cookieAuth": {
+                "type": "apiKey",
+                "name": "theatrum-neolatinum.cz.login",
+                "in": "cookie"
+            }
+        }
+    },
+    "paths": {
+        "/api/logout": {
+            "get": {
+                "summary": "User Logout",
+                "description": "End session of the current user",
+                "operationId": "auth:logout",
+                "tags": ["auth"],
+                "parameters": [
+                    {
+                        "name": "logout",
+                        "in": "query",
+                        "description": "Set to some value to log out the current user",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": { "type": "boolean" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "301": {
+                        "description": "Redirect with the logout parameter set.",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": { "description": "unauthorized" }
+                }
+            }
+        },
+        "/api/login": {
+            "post": {
+                "summary": "User Login",
+                "description": "Start an authenticated session for the given user",
+                "tags": ["auth"],
+                "operationId": "auth:login",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [ "user" ],
+                                "properties": {
+                                    "user": {
+                                        "description": "Name of the user",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "required": [ "user" ],
+                                "properties": {
+                                    "user": {
+                                        "description": "Name of the user",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user": { "type": "string" },
+                                        "groups": {
+                                            "type": "array",
+                                            "items": { "type": "string" }
+                                        },
+                                        "dba": { "type": "boolean" },
+                                        "domain": { "type": "string" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Wrong user or password"
+                    }
+                },
+                "security": [{ "cookieAuth": [] }]
+            }
+        },
+        "/api/clean/{collection}" : {
+            "delete" : {
+                "summary": "Cleans specified collection.",
+                "description": "Removes all content of the collection including collection itself.",
+                "operationId":  "upld:clean",
+                "x-constraints": {
+					"groups": ["tei"]
+				},
+                "tags": ["files"],
+                "parameters": [
+                    {
+                        "name": "collection",
+                        "in": "path",
+                        "required": true,
+                        "description": "Use / for the root of the data collection",
+                        "schema":{
+                             "type": "string",
+                             "default" : "/"
+                            },
+                        "example" : "/"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Colection deleted",
+                        "content": {
+                            "application/xml": {
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Content was invalid",
+                        "content": {
+                            "application/xml": {
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/upload/{collection}": {
+            "post": {
+                "summary": "Upload a single file (zip, xconf, or xml) to a collection.",
+                "description": "The collection path is part of the URL.",
+                "operationId": "upld:upload",
+                "x-constraints": {
+					"groups": ["tei", "dba"]
+				},
+                "tags": ["files"],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["file"],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "collection",
+                        "in": "path",
+                        "required": true,
+                        "description": "Use / for the root of the data collection",
+                        "schema":{
+                             "type": "string",
+                             "default" : "/"
+                            },
+                        "example" : "/"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created uploaded file",
+                        "content": {
+                            "application/xml": {
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Content was invalid",
+                        "content": {
+                            "application/xml": {
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/permission/{collection}": {
+            "put": {
+                "summary": "Set permission to files in the collection.",
+                "description": "The collection path is part of the URL. Use / for the root of the data collection",
+                "operationId": "upld:permission",
+                "x-constraints": {
+					"groups": ["tei", "dba"]
+				},
+                "tags": ["files"],
+                "parameters": [
+                    {
+                        "name": "collection",
+                        "in": "path",
+                        "required": true,
+                        "description": "Use / for the root of the data collection",
+                        "schema":{
+                             "type": "string",
+                             "default" : "/"
+                            },
+                        "example" : "/"
+                    }
+                ],
+                
+                "responses": {
+                    "204": {
+                        "description": "Permission applied",
+                        "content": {
+                            "application/xml": {
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Collection not found",
+                        "content": {
+                            "application/xml": {
+                                "schema": { "type": "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/report/{collection}" : {
+            "get": {
+                "summary": "Report of the index values in the collection",
+                "description": "Shows values for each index defined for the collection.",
+                "operationId": "upld:report",
+                "x-constraints": {
+					"groups": ["tei"]
+				},
+                "tags": ["query"],
+                "parameters": [
+                    {
+                        "name": "collection",
+                        "in": "path",
+                        "description": "Collection for which the report will be generated",
+                        "required": true,
+                        "schema":{ "type": "string" }
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "description": "Maximum values generated for particular index.",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "item",
+                        "in": "query",
+                        "description": "Id of the object for which the report will be generated.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": { "description": "unauthorized" }
+                }
+            }
+        },
+        "/api/query/{collection}" : {
+            "get": {
+                "summary": "Queries the collection and returns list of etries",
+                "description": "Returns list of entrie from the collection that satisfy conditions in the posted query.",
+                "operationId": "upld:query",
+                "x-constraints": {
+					"groups": ["tei"]
+				},
+                "tags": ["query"],
+                "parameters": [
+                    {
+                        "name": "collection",
+                        "in": "path",
+                        "description": "Collection against which the query will be executed",
+                        "required": true,
+                        "schema":{ "type": "string" }
+                    },
+                    {
+						"name": "start",
+						"in": "query",
+						"description": "Start offset of the first item to show from the result set",
+						"schema": {
+							"type": "integer",
+							"default": 1
+						}
+					},
+					{
+						"name": "per-page",
+						"in": "query",
+						"description": "Number of items to show on one page",
+						"schema": {
+							"type": "integer",
+							"default": 10
+						}
+					},
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "description": "Search query with conditions.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": { "description": "unauthorized" }
+                }
+            }
+        },
+        "/api/autocomplete/{collection}" : {
+            "get": {
+                "summary": "List possible completions",
+                "description": "Return a list of possible completions for the given search term",
+                "operationId": "upld:autocomplete",
+                "tags": ["query"],
+                "parameters": [
+                    {
+                        "name": "collection",
+                        "in": "path",
+                        "description": "Collection against which the query will be executed",
+                        "required": true,
+                        "schema":{ "type": "string" }
+                    },
+                    {
+                        "name": "field",
+                        "in": "query",
+                        "description": "The field to query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "description": "The prefix to expand",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+					"200": {
+						"description": "List of possible completions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"text": {
+												"type": "string"
+											},
+											"value": {
+												"type": "string"
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+            }
+        }
+    }
+}
