@@ -8,11 +8,13 @@ import module namespace unzip="http://joewiz.org/ns/xquery/unzip" at "unzip.xql"
 import module namespace config = "http://www.tei-c.org/tei-simple/config" at "config.xqm";
 import module namespace idx = "http://teilex0/ns/xquery/index" at "report.xql";
 import module namespace console="http://exist-db.org/xquery/console";
+import module namespace errors = "http://e-editiones.org/roaster/errors";
+import module namespace compression = "http://exist-db.org/xquery/compression";
+
 
 declare default collation "?lang=cs";
 
 
-declare namespace errors = "http://e-editiones.org/roaster/errors";
 declare namespace map = "http://www.w3.org/2005/xpath-functions/map";
 declare namespace tei = "http://www.tei-c.org/ns/1.0";
 declare namespace query="http://www.tei-c.org/tei-simple/query";
@@ -28,6 +30,33 @@ declare variable $upld:QUERY_OPTIONS := map {
     "filter-rewrite": "yes"
 };
 
+declare function upld:download-collection($request as map(*)) {
+    let $start-time as xs:time := util:system-time()
+    let $name := upld:get-collection($request)
+    let $main-collection := tokenize($name, "/")[last()] => lower-case()
+    let $collectionPath := ($config:data-root || "/" || $name) => replace("//", "/")
+    (: return
+    error($errors:NOT_FOUND, "Collection " || $collectionPath || " not found; " || xmldb:collection-available($collectionPath) ) :)
+    
+    return if(xmldb:collection-available($collectionPath)) then
+        let $zip := compression:zip(xs:anyURI($collectionPath), true())
+        return response:stream-binary($zip, "application/zip") (: roaster:response(200, "application/zip", $zip) :)
+     else
+        error($errors:NOT_FOUND, "Collection " || $collectionPath || " not found")
+    
+};
+declare function upld:download-document($request as map(*)) {
+    let $start-time as xs:time := util:system-time()
+    let $name := upld:get-collection($request)
+    let $id := xmldb:decode($request?parameters?id)
+    let $main-collection := tokenize($name, "/")[last()] => lower-case()
+    let $collectionPath := $config:data-root || "/" || $name
+    let $document-uri := $collectionPath || "/" || $id
+    return if(doc-available($document-uri)) then
+      roaster:response(200, "application/xml", doc($document-uri))
+     else
+        error($errors:NOT_FOUND, "Document " || $id || " in the collection " || $collectionPath || " not found")
+};
 
 declare function upld:upload($request as map(*)) {
     let $start-time as xs:time := util:system-time()

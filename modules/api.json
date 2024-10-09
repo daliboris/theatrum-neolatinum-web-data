@@ -262,6 +262,97 @@
                 }
             }
         },
+        "/api/download/{collection}": { 
+            "get": {
+				"summary": "Get the source of a document",
+				"description": "Get the source of a document, either as XML, text or binary.",
+				"tags": ["documents"],
+				"operationId": "upld:download-collection",
+                "x-constraints": {
+					"groups": ["tei"]
+				},
+				"parameters": [
+					{
+						"name": "collection",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+                ],
+                "responses": {
+					"200": {
+						"description": "Content of the collection",
+						"content": {
+							"application/zip": {
+								"schema": {
+									"type": "string",
+									"format": "binary"
+								}
+                            }
+                        }
+                    },
+                    "410": {
+						"description": "Collection deleted"
+					}
+				}
+			}
+        },
+        "/api/download/{collection}/{id}": {
+			"get": {
+				"summary": "Get the source of a document",
+				"description": "Get the source of a document, either as XML, text or binary.",
+				"tags": ["documents"],
+				"operationId": "upld:download-document",
+                "x-constraints": {
+					"groups": ["tei"]
+				},
+				"parameters": [
+                    {
+						"name": "collection",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Content of the document",
+						"content": {
+							"application/xml": {
+								"schema": {
+									"type": "string"
+								}
+							},
+							"text/markdown": {
+								"schema": {
+									"type": "string"
+								}
+							},
+							"text/text": {
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"410": {
+						"description": "Document deleted"
+					}
+				}
+			}
+        },
         "/api/permission/{collection}": {
             "put": {
                 "summary": "Set permission to files in the collection.",
