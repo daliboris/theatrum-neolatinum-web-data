@@ -11,4 +11,9 @@
    <prepare>pre-install.xql</prepare>
    <finish>post-install.xql</finish>
    <permissions user="tnl" group="tei" mode="rw-rw-r--"/>
+   <change version="0.4.0">
+      <ul xmlns="http://www.w3.org/1999/xhtml">
+          <li>REST API for downloading collections (as a ZIP) and files</li>
+      </ul>
+  </change>
 </meta>

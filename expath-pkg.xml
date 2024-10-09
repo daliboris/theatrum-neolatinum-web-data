@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package name="http://theatrum-neolatinum.cz/ns/apps/tnlanno-data" abbrev="tnlanno-data" version="0.3.0" spec="1.0" xmlns="http://expath.org/ns/pkg">
+<package name="http://theatrum-neolatinum.cz/ns/apps/tnlanno-data" abbrev="tnlanno-data" version="0.4.0" spec="1.0" xmlns="http://expath.org/ns/pkg">
       <title>Theatrum Neolatinum Annotation: data</title>
       <home>https://github.com/daliboris/theatrum-neolatinum-web-data</home>
       <dependency processor="http://exist-db.org" semver-min="5.3.0" />
